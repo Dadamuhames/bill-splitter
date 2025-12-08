@@ -10,6 +10,7 @@ import com.uzumtech.billsplitter.exception.UniqueFieldException;
 import com.uzumtech.billsplitter.exception.WaiterNotFoundException;
 import com.uzumtech.billsplitter.mapper.WaiterMapper;
 import com.uzumtech.billsplitter.repository.WaiterRepository;
+import com.uzumtech.billsplitter.service.WaiterCRUDService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class WaiterCRUDService {
+public class WaiterCRUDServiceImpl implements WaiterCRUDService {
     private final WaiterRepository waiterRepository;
     private final PasswordEncoder passwordEncoder;
     private final WaiterMapper waiterMapper;

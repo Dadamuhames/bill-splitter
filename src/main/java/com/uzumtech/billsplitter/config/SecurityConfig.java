@@ -42,7 +42,7 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(
                 auth ->
-                    auth.requestMatchers("/api/v1/waiter/auth/**", "/api/v1/merchant/auth/**")
+                    auth.requestMatchers("/api/v1/waiter/auth/**", "/api/v1/merchant/auth/**", "/api/v1/common/auth/**")
                         .permitAll()
                         .requestMatchers("/api/v1/merchant/**")
                         .hasRole("MERCHANT")

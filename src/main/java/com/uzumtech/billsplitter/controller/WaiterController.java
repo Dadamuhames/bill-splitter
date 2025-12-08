@@ -4,7 +4,7 @@ import com.uzumtech.billsplitter.dto.request.waiter.WaiterCreateRequest;
 import com.uzumtech.billsplitter.dto.request.waiter.WaiterUpdateRequest;
 import com.uzumtech.billsplitter.dto.response.WaiterResponse;
 import com.uzumtech.billsplitter.entity.user.MerchantEntity;
-import com.uzumtech.billsplitter.service.impl.WaiterCRUDService;
+import com.uzumtech.billsplitter.service.WaiterCRUDService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

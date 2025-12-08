@@ -43,10 +43,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
 
     @Override
-    public UserDetails getUserDetails(final String token) {
-        RefreshTokenEntity refreshToken = findByToken(token);
-
-        return detailsServiceDispatcher.loadUserByLoginAndRole(refreshToken.getSubject(), refreshToken.getUserRole());
+    public CustomUserDetails getUserDetails(final RefreshTokenEntity refreshToken) {
+        return (CustomUserDetails) detailsServiceDispatcher.loadUserByLoginAndRole(refreshToken.getSubject(), refreshToken.getUserRole());
     }
 
 
@@ -58,11 +56,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
     }
 
-    public void deleteToken(final RefreshTokenEntity token) {
-        refreshTokenRepository.delete(token);
-    }
-
-    public void deleteByToken(final String token) {
-        refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
+    @Override
+    public void expireToken(RefreshTokenEntity token) {
+        token.setExpiryDate(Instant.now());
+        refreshTokenRepository.save(token);
     }
 }
