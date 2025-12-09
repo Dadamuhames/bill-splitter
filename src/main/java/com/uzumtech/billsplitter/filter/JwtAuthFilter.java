@@ -1,8 +1,11 @@
 package com.uzumtech.billsplitter.filter;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uzumtech.billsplitter.constant.enums.Error;
+import com.uzumtech.billsplitter.constant.enums.ErrorType;
 import com.uzumtech.billsplitter.constant.enums.Role;
+import com.uzumtech.billsplitter.dto.error.ErrorResponse;
 import com.uzumtech.billsplitter.exception.JwtMalformedException;
 import com.uzumtech.billsplitter.service.auth.token.JwtService;
 import com.uzumtech.billsplitter.service.auth.userdetails.UserDetailsServiceDispatcher;
@@ -13,6 +16,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,6 +35,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
     private final UserDetailsServiceDispatcher detailsServiceDispatcher;
 
     @Override
@@ -49,25 +55,43 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // TODO: proper error handling - controller advice does not handle filters
-
         String jwt = authHeader.substring(7);
 
-        if (jwtService.isTokenExpired(jwt)) {
-            filterChain.doFilter(request, response);
-            throw new JwtMalformedException(Error.JWT_INVALID_CODE);
+
+        try {
+            if (jwtService.isTokenExpired(jwt)) {
+                filterChain.doFilter(request, response);
+                throw new JwtMalformedException(Error.JWT_INVALID_CODE);
+            }
+
+            String username = jwtService.extractSubject(jwt);
+            Role role = jwtService.extractRole(jwt);
+
+            UserDetails userDetails = detailsServiceDispatcher.loadUserByLoginAndRole(username, role);
+
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
+
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        } catch (JwtMalformedException ex) {
+            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+            var errorResponse = ErrorResponse.of(ex);
+
+            objectMapper.writeValue(response.getWriter(), errorResponse);
+            return;
+        } catch (Exception ex) {
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+            var errorResponse = ErrorResponse.of(Error.INTERNAL_SERVICE_ERROR_CODE, ex.getMessage(), ErrorType.INTERNAL);
+
+            objectMapper.writeValue(response.getWriter(), errorResponse);
+
+            return;
         }
-
-        String username = jwtService.extractSubject(jwt);
-        Role role = jwtService.extractRole(jwt);
-
-        UserDetails userDetails = detailsServiceDispatcher.loadUserByLoginAndRole(username, role);
-
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
-
-        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         filterChain.doFilter(request, response);
     }
