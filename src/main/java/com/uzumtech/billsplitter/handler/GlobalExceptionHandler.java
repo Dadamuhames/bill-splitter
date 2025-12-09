@@ -136,13 +136,13 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
-//
-//    @ExceptionHandler(Exception.class)
-//    private ResponseEntity<ErrorResponse> handleGenericException(final Exception ex) {
-//        log.error("Exception : {}", ex.getMessage(), ex);
-//
-//        var error = ErrorResponse.of(Error.INTERNAL_SERVICE_ERROR_CODE, ex.getMessage(), ErrorType.INTERNAL);
-//
-//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-//    }
+
+    @ExceptionHandler(Exception.class)
+    private ResponseEntity<ErrorResponse> handleGenericException(final Exception ex) {
+        log.error("Exception : {}", ex.getMessage(), ex);
+
+        var error = ErrorResponse.of(Error.INTERNAL_SERVICE_ERROR_CODE, ex.getMessage(), ErrorType.INTERNAL);
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
 }
